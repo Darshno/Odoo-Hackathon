@@ -23,6 +23,9 @@ Copy `backend/.env.example` to `backend/.env` and replace placeholders locally. 
 
 Important backend variables are `SECRET_KEY`, `DATABASE_URL`, `CORS_ORIGINS`, `ACCESS_TOKEN_EXPIRE_MINUTES`, reset-token settings, SMTP settings, `FRONTEND_URL`, the three `BOOTSTRAP_ADMIN_*` values, and billing scheduler settings. `BILLING_SCHEDULER_ENABLED` defaults to `true`; `BILLING_SCHEDULER_INTERVAL_SECONDS` defaults to 3600 and must be at least 60. SMTP is optional in development. Without it, the API returns a preview token only when `ENVIRONMENT=development` and `RESET_PREVIEW_ENABLED=true`; it never claims an email was delivered. In production and staging, the app fails fast if `SECRET_KEY` is missing, `DATABASE_URL` is SQLite, or reset preview is enabled. The frontend installs Tailwind as requested, but the delivered interface intentionally uses the custom CSS design system rather than long utility strings.
 
+The project is validated on Python 3.12. The backend dependency set is intentionally pinned to a Python 3.12-compatible toolchain; newer 3.15 environments may fail during native wheel builds for transitive dependencies such as `PyYAML`. Use the 3.12 interpreter for local setup and validation unless a compatible toolchain is confirmed separately.
+
+
 ## Linux/macOS backend
 
 ```bash
@@ -118,6 +121,7 @@ Subscription endpoints:
 ```text
 GET  /api/subscriptions
 GET  /api/subscriptions/{subscription_id}
+POST /api/subscriptions/from-plan/{plan_id}
 POST /api/subscriptions/from-quotation/{quotation_id}
 POST /api/subscriptions/{subscription_id}/activate
 POST /api/subscriptions/{subscription_id}/pause
@@ -127,7 +131,9 @@ POST /api/subscriptions/{subscription_id}/close
 POST /api/subscriptions/process-due
 ```
 
-Subscription statuses are `ACTIVE`, `PAUSED`, and `CLOSED`. ACTIVE subscriptions may be paused when every historical line permits pausing; PAUSED subscriptions may resume; CLOSED subscriptions cannot be reactivated. Renewal advances `last_billing_date` and `next_billing_date` only when every line permits renewal. Daily, weekly, monthly, and yearly billing dates are calculated with calendar-aware month/year handling. ADMIN and STAFF manage subscriptions; customers can convert their own accepted quotations and view only their own subscriptions.
+Customers can select an active plan in **Choose a Plan**. `POST /api/subscriptions/from-plan/{plan_id}` accepts `{"quantity": 1}` (quantity must meet the plan minimum) and creates an accepted quotation, an ACTIVE subscription, and its first issued invoice in one transaction. The response includes both `subscription` and `invoice`. The purchased subscription appears in the customer's Subscriptions page and the invoice appears in Invoices. Customers can also accept a staff-sent quotation; the frontend then converts it to a subscription and creates the first invoice. No payment gateway is connected, so payments must still be recorded by ADMIN/STAFF.
+
+Subscription statuses are `ACTIVE`, `PAUSED`, and `CLOSED`. ACTIVE subscriptions may be paused when every historical line permits pausing; the owning customer or ADMIN/STAFF can pause or resume them. ADMIN/STAFF retain activate, renew, close, and due-processing permissions. CLOSED subscriptions cannot be reactivated. Renewal advances `last_billing_date` and `next_billing_date` only when every line permits renewal. Daily, weekly, monthly, and yearly billing dates are calculated with calendar-aware month/year handling. Customers can view only their own subscriptions and invoices.
 
 `process_due_subscriptions` is a callable service used by the `/api/subscriptions/process-due` ADMIN/STAFF endpoint. Due processing generates recurring invoices before advancing subscription dates. The FastAPI app also starts an in-process billing scheduler by default: it runs one billing cycle at startup and then repeats at the configured interval. Set `BILLING_SCHEDULER_ENABLED=false` to disable it. The scheduler calls the same idempotent billing service as the manual endpoint; database locking and the invoice subscription-period uniqueness constraint protect repeated processing. Each running API process starts its own scheduler, so use a single API worker/instance for predictable scheduling, or disable this scheduler and invoke the processing endpoint from a dedicated external scheduler in multi-instance deployments.
 
