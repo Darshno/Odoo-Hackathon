@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/AuthContext'
 import { listUsers } from '../services/auth'
 import { listSubscriptions, processDueSubscriptions, activateSubscription, pauseSubscription, resumeSubscription, renewSubscription, closeSubscription } from '../services/subscriptions'
 import { errorMessage } from '../utils/validation'
+import { formatCurrency } from '../utils/currency'
 
 const statusLabels = {
   ACTIVE: 'Active',
@@ -25,12 +26,6 @@ const formatDate = (value) => {
   const date = new Date(`${value}T00:00:00`)
   if (Number.isNaN(date.getTime())) return value
   return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date)
-}
-
-const formatCurrency = (currency, value) => {
-  const code = currency || 'USD'
-  const numeric = Number(value ?? 0)
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: code }).format(numeric)
 }
 
 export default function SubscriptionsPage() {

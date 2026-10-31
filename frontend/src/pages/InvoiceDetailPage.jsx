@@ -5,6 +5,7 @@ import { Alert, PrimaryButton, SecondaryButton } from '../components/FormControl
 import { useAuth } from '../hooks/AuthContext'
 import { getInvoice, issueInvoice, voidInvoice } from '../services/billing'
 import { errorMessage } from '../utils/validation'
+import { formatCurrency } from '../utils/currency'
 
 const statusLabels = {
   DRAFT: 'Draft',
@@ -36,12 +37,6 @@ const formatDateTime = (value) => {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return date.toISOString()
   return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
-}
-
-const formatCurrency = (currency, value) => {
-  const code = currency || 'USD'
-  const numeric = Number(value ?? 0)
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: code }).format(numeric)
 }
 
 export default function InvoiceDetailPage() {
