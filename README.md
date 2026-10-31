@@ -1,3 +1,4 @@
+
 # Brightloop Subscription Management System
 
 Brightloop is a full-stack subscription operations system. Phase 1 provides authentication, role-based access, user management, profiles, and dashboards. Phase 2 adds product catalog management, product variants, and validated recurring subscription plans.
