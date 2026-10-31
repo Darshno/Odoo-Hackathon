@@ -1,4 +1,4 @@
-import { BarChart3, CreditCard, FileText, LogOut, Menu, Package, Repeat2, Settings, Users, X } from 'lucide-react'
+import { BarChart3, CreditCard, FileText, LogOut, Menu, Package, Receipt, Repeat2, Settings, Users, X } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useState } from 'react'
 import Logo from './Logo'
@@ -14,16 +14,18 @@ export default function Sidebar() {
         { to: '/my-quotations', label: 'My Quotations', icon: FileText },
         { to: '/plans', label: 'My Plans', icon: Repeat2 },
         { to: '/subscriptions', label: 'Subscriptions', icon: CreditCard },
-        { to: '/profile', label: 'Profile', icon: Settings },
-      ]
+      { to: '/invoices', label: 'Invoices', icon: Receipt },
+      { to: '/profile', label: 'Profile', icon: Settings },
+    ]
     : [
-        { to: '/dashboard', label: 'Dashboard', icon: BarChart3 },
-        { to: '/products', label: 'Products', icon: Package },
-        { to: '/plans', label: 'Plans', icon: Repeat2 },
-        { to: '/subscriptions', label: 'Subscriptions', icon: CreditCard },
-        ...(user?.role === 'ADMIN' ? [{ to: '/admin/users', label: 'User Management', icon: Users }] : []),
-        { to: '/profile', label: 'Profile', icon: Settings },
-      ]
+      { to: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+      { to: '/products', label: 'Products', icon: Package },
+      { to: '/plans', label: 'Plans', icon: Repeat2 },
+      { to: '/subscriptions', label: 'Subscriptions', icon: CreditCard },
+      { to: '/invoices', label: 'Invoices', icon: Receipt },
+      ...(user?.role === 'ADMIN' ? [{ to: '/admin/users', label: 'User Management', icon: Users }] : []),
+      { to: '/profile', label: 'Profile', icon: Settings },
+    ]
 
   return <>
     <button className="mobile-sidebar-toggle" onClick={() => setOpen(true)} aria-label="Open dashboard navigation"><Menu /></button>
