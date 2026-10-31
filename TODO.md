@@ -51,5 +51,9 @@
 - [x] ADMIN and STAFF can manage catalog resources; CUSTOMER accounts can only read active, currently available catalog data and never receive cost prices or internal notes.
 - [x] Alembic migration `0002_catalog` and backend/frontend catalog tests are included.
 
-## 8. Explicitly deferred later-phase modules
-- [x] Do not implement quotations, subscription creation or activation, subscription lifecycle processing, recurring invoice generation, invoice payment processing, discounts, payment recording, or revenue analytics.
+## 8. Phase 3 quotation management
+- [x] Quotation models, historical line snapshots, decimal totals, status transitions, role permissions, paginated APIs, migration `0003_quotations`, and backend tests are implemented.
+- [x] Quotation acceptance does not activate subscriptions or create invoices or payments.
+
+## 9. Explicitly deferred later-phase modules
+- [ ] Subscription creation or activation, subscription lifecycle processing, recurring invoice generation, invoice payment processing, discounts, payment recording, and revenue analytics.

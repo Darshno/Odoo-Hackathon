@@ -100,3 +100,9 @@ If imports are unresolved in an editor, activate the backend virtual environment
 ## Phase 2 catalog
 
 Run `alembic upgrade head` to apply the catalog migration. ADMIN and STAFF can create/update/activate/deactivate products, variants, and plans. CUSTOMER accounts can read active, currently available catalog records only; cost prices and internal notes are omitted from customer responses. Products include type, SKU, sales/cost prices, currency, notes, and creator; variants add independent prices and JSON attributes. Product and variant references are protected from deletion. Plans support DAILY, WEEKLY, MONTHLY, and YEARLY billing, minimum quantities, availability dates, pause/renewal/early-closure/auto-close controls, and paginated search/filter/sort APIs. The authenticated dashboard exposes Products and Plans routes backed by these APIs.
+
+## Phase 3 quotations
+
+Run `alembic upgrade head` to apply migration `0003_quotations`. ADMIN and STAFF can create, edit, list, send, and cancel quotations for active CUSTOMER accounts. Customers can view only their own quotations and accept or reject quotations in `SENT` status. Quotation lines snapshot the product, variant, plan, SKU, billing interval, and decimal price at creation time; later catalog changes do not alter existing quotations. Quotation totals use `Decimal` arithmetic and quotation numbers use the `Q-YYYY-000001` format. Quotation acceptance does not activate subscriptions or create invoices or payments.
+
+Quotation APIs are available under `/api/quotations` with paginated list/detail responses and transition endpoints for `/send`, `/accept`, `/reject`, and `/cancel`.

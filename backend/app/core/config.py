@@ -1,9 +1,10 @@
+import json
 import secrets
 from functools import lru_cache
-from typing import List
+from typing import Annotated
 
 from pydantic import field_validator, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -13,7 +14,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     database_url: str = "sqlite:///./brightloop.db"
-    cors_origins: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:3000", "http://127.0.0.1:3000"]
     reset_token_expire_minutes: int = 30
     smtp_host: str | None = None
     smtp_port: int = 587
@@ -32,6 +33,11 @@ class Settings(BaseSettings):
     @classmethod
     def parse_origins(cls, value):
         if isinstance(value, str):
+            if value.lstrip().startswith("["):
+                parsed = json.loads(value)
+                if not isinstance(parsed, list) or not all(isinstance(item, str) for item in parsed):
+                    raise ValueError("CORS_ORIGINS must be a comma-separated string or JSON array of strings.")
+                return [item.strip() for item in parsed if item.strip()]
             return [item.strip() for item in value.split(",") if item.strip()]
         return value
 
