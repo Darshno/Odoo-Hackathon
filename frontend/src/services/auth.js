@@ -20,3 +20,8 @@ export const createVariant = (productId, payload) => api.post(`/products/${produ
 export const listPlans = () => api.get('/plans')
 export const createPlan = (payload) => api.post('/plans', payload)
 export const updatePlan = (id, payload) => api.patch(`/plans/${id}`, payload)
+export const listQuotations = (params = {}) => api.get('/quotations', { params })
+export const getQuotation = (id) => api.get(`/quotations/${id}`)
+export const acceptQuotation = (id) => api.post(`/quotations/${id}/accept`)
+export const rejectQuotation = (id) => api.post(`/quotations/${id}/reject`)
+export const sendQuotation = (id) => api.post(`/quotations/${id}/send`)
