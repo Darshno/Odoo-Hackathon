@@ -3,7 +3,7 @@ import secrets
 from functools import lru_cache
 from typing import Annotated
 
-from pydantic import field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     bootstrap_admin_name: str | None = None
     bootstrap_admin_email: str | None = None
     bootstrap_admin_password: str | None = None
+    billing_scheduler_enabled: bool = True
+    billing_scheduler_interval_seconds: int = Field(default=3600, ge=60)
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
 

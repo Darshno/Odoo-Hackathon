@@ -1,10 +1,36 @@
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import auth, billing, catalog, health, profile, quotations, subscriptions, users
 from app.core.config import settings
+from app.services.billing_scheduler import billing_scheduler_loop
 
-app = FastAPI(title=settings.app_name, version="2.0.0", description="Brightloop subscription management API.")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    scheduler_task = None
+    if settings.billing_scheduler_enabled:
+        scheduler_task = asyncio.create_task(billing_scheduler_loop(), name="billing-scheduler")
+    try:
+        yield
+    finally:
+        if scheduler_task:
+            scheduler_task.cancel()
+            try:
+                await scheduler_task
+            except asyncio.CancelledError:
+                pass
+
+
+app = FastAPI(
+    title=settings.app_name,
+    version="2.0.0",
+    description="Brightloop subscription management API.",
+    lifespan=lifespan,
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,

@@ -3,6 +3,7 @@ import os
 os.environ["DATABASE_URL"] = "sqlite:///./test_brightloop.db"
 os.environ["SECRET_KEY"] = "test-secret-key"
 os.environ["RESET_PREVIEW_ENABLED"] = "true"
+os.environ["BILLING_SCHEDULER_ENABLED"] = "false"
 
 import pytest
 from fastapi.testclient import TestClient

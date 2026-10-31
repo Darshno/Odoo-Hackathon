@@ -1,6 +1,7 @@
 import api from './api'
 
 export const listInvoices = (params = {}) => api.get('/billing/invoices', { params })
+export const getRevenueAnalytics = (params = {}) => api.get('/billing/analytics', { params })
 export const getInvoice = (id) => api.get(`/billing/invoices/${id}`)
 export const generateInvoiceFromSubscription = (subscriptionId, payload = {}) => api.post(`/billing/invoices/generate/${subscriptionId}`, payload)
 export const issueInvoice = (id) => api.post(`/billing/invoices/${id}/issue`)

@@ -159,7 +159,19 @@ h1 em, h2 em { font-family: 'Source Serif 4', Georgia, serif; font-weight: 600; 
 .refresh-button { min-height: 46px; }
 .header-actions { flex: 0 0 auto; }
 .dashboard-grid { display: grid; grid-template-columns: minmax(220px, .7fr) 1.3fr; gap: 14px; }
+.analytics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .dashboard-card { min-height: 188px; padding: 25px; border: 1px solid var(--border-soft); border-radius: var(--radius); background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,.025); }
+.analytics-activity { grid-column: 1 / -1; }
+.analytics-date-filter { display: flex; gap: 10px; }
+.analytics-date-filter label { display: grid; gap: 5px; color: var(--muted); font-size: 11px; }
+.analytics-date-filter input { min-width: 145px; padding: 10px 12px; border: 1px solid var(--border-soft); border-radius: 10px; color: var(--text); background: #fff; }
+.analytics-section-heading { display: flex; justify-content: space-between; align-items: start; gap: 15px; }
+.analytics-section-heading p { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+.analytics-payment-list { margin-top: 20px; }
+.analytics-payment-row { display: flex; justify-content: space-between; align-items: center; gap: 15px; padding: 14px 0; border-top: 1px solid var(--border-soft); }
+.analytics-payment-row > div { display: grid; gap: 4px; }
+.analytics-payment-row span, .analytics-empty { color: var(--muted); font-size: 12px; }
+.analytics-empty { margin: 20px 0 0; }
 .card-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 11px; background: #eefbf1; color: var(--green); }
 .card-label { display: block; margin-top: 28px; color: var(--muted); font-size: 12px; }
 .card-value { display: block; margin-top: 3px; font-size: 34px; letter-spacing: -.07em; }
@@ -315,7 +327,12 @@ td strong { display: block; font-size: 13px; }
   .page-header h1 { font-size: 43px; }
   .header-actions { margin-top: 22px; }
   .header-actions .button { width: 100%; }
-  .dashboard-grid, .profile-layout { grid-template-columns: 1fr; }
+  .dashboard-grid, .analytics-grid, .profile-layout { grid-template-columns: 1fr; }
+  .analytics-activity { grid-column: auto; }
+  .analytics-date-filter { width: 100%; }
+  .analytics-date-filter label { flex: 1; }
+  .analytics-date-filter input { min-width: 0; width: 100%; }
+  .page-header { align-items: start; flex-direction: column; }
   .dashboard-callout { display: block; padding: 28px 23px; }
   .dashboard-callout .button { margin-top: 24px; }
   .profile-snapshot { display: block; }

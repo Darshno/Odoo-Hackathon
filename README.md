@@ -21,7 +21,7 @@ The initialized managed preview database is MySQL-compatible. It can be used wit
 
 Copy `backend/.env.example` to `backend/.env` and replace placeholders locally. Copy `frontend/.env.example` to `frontend/.env` when you need a non-default API base URL. Never commit `.env` files or credentials.
 
-Important backend variables are `SECRET_KEY`, `DATABASE_URL`, `CORS_ORIGINS`, `ACCESS_TOKEN_EXPIRE_MINUTES`, reset-token settings, SMTP settings, `FRONTEND_URL`, and the three `BOOTSTRAP_ADMIN_*` values. SMTP is optional in development. Without it, the API returns a preview token only when `ENVIRONMENT=development` and `RESET_PREVIEW_ENABLED=true`; it never claims an email was delivered. In production and staging, the app fails fast if `SECRET_KEY` is missing, `DATABASE_URL` is SQLite, or reset preview is enabled. The frontend installs Tailwind as requested, but the delivered interface intentionally uses the custom CSS design system rather than long utility strings.
+Important backend variables are `SECRET_KEY`, `DATABASE_URL`, `CORS_ORIGINS`, `ACCESS_TOKEN_EXPIRE_MINUTES`, reset-token settings, SMTP settings, `FRONTEND_URL`, the three `BOOTSTRAP_ADMIN_*` values, and billing scheduler settings. `BILLING_SCHEDULER_ENABLED` defaults to `true`; `BILLING_SCHEDULER_INTERVAL_SECONDS` defaults to 3600 and must be at least 60. SMTP is optional in development. Without it, the API returns a preview token only when `ENVIRONMENT=development` and `RESET_PREVIEW_ENABLED=true`; it never claims an email was delivered. In production and staging, the app fails fast if `SECRET_KEY` is missing, `DATABASE_URL` is SQLite, or reset preview is enabled. The frontend installs Tailwind as requested, but the delivered interface intentionally uses the custom CSS design system rather than long utility strings.
 
 ## Linux/macOS backend
 
@@ -129,7 +129,7 @@ POST /api/subscriptions/process-due
 
 Subscription statuses are `ACTIVE`, `PAUSED`, and `CLOSED`. ACTIVE subscriptions may be paused when every historical line permits pausing; PAUSED subscriptions may resume; CLOSED subscriptions cannot be reactivated. Renewal advances `last_billing_date` and `next_billing_date` only when every line permits renewal. Daily, weekly, monthly, and yearly billing dates are calculated with calendar-aware month/year handling. ADMIN and STAFF manage subscriptions; customers can convert their own accepted quotations and view only their own subscriptions.
 
-`process_due_subscriptions` is a callable service used by the manual `/process-due` ADMIN/STAFF endpoint. Task 3 now makes due processing generate recurring invoices before advancing subscription dates. No scheduler is configured in this repository, so deployment must invoke a due-processing endpoint from an external scheduler if automatic processing is required.
+`process_due_subscriptions` is a callable service used by the `/api/subscriptions/process-due` ADMIN/STAFF endpoint. Due processing generates recurring invoices before advancing subscription dates. The FastAPI app also starts an in-process billing scheduler by default: it runs one billing cycle at startup and then repeats at the configured interval. Set `BILLING_SCHEDULER_ENABLED=false` to disable it. The scheduler calls the same idempotent billing service as the manual endpoint; database locking and the invoice subscription-period uniqueness constraint protect repeated processing. Each running API process starts its own scheduler, so use a single API worker/instance for predictable scheduling, or disable this scheduler and invoke the processing endpoint from a dedicated external scheduler in multi-instance deployments.
 
 ## Task 3 billing and payments
 
@@ -138,6 +138,7 @@ Run `alembic upgrade head` to apply migration `0006_billing`, which adds invoice
 ```text
 GET  /api/billing/invoices
 GET  /api/billing/invoices/{invoice_id}
+GET  /api/billing/analytics?date_from=YYYY-MM-DD&date_to=YYYY-MM-DD
 POST /api/billing/invoices/generate/{subscription_id}
 POST /api/billing/invoices/process-due
 POST /api/billing/invoices/{invoice_id}/issue
@@ -155,4 +156,4 @@ Only ACTIVE subscriptions can generate invoices. PAUSED and CLOSED subscriptions
 
 Discounts support fixed and percentage values, validity windows, minimum-subtotal thresholds, and global usage limits; a fixed discount requires its currency. One discount can be attached to an invoice. Discount use is counted when an invoice is generated, including when generated as a draft. Payments support partial allocation and update `amount_paid`, `amount_due`, and invoice status transactionally. A payment does not mark an invoice paid unless the outstanding balance reaches zero. Invoice due dates currently default to 30 days after issue; quotation payment terms are copied as display text and are not interpreted to determine the due date.
 
-ADMIN and STAFF can generate/issue/void invoices, manage discounts, and record payments. Authenticated customers can list and view only their own invoices and payments. No payment gateway or automatic scheduler is configured; `/api/billing/invoices/process-due` or the existing `/api/subscriptions/process-due` endpoint must be invoked by an external scheduler for recurring billing.
+ADMIN and STAFF can generate/issue/void invoices, manage discounts, record payments, and view revenue analytics. Authenticated customers can list and view only their own invoices and payments; analytics is not available to customers. The analytics endpoint defaults to the last 30 days of confirmed payments, accepts optional `date_from` and `date_to` filters, and returns paid revenue and current outstanding balances grouped by currency, subscription status counts, and the five latest confirmed payments in the selected range. Amounts in different currencies are never combined. The in-process billing scheduler is enabled by default; alternatively, disable it and invoke `/api/billing/invoices/process-due` or `/api/subscriptions/process-due` from an external scheduler. No payment gateway is configured.

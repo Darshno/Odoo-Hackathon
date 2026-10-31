@@ -399,3 +399,50 @@ def test_due_processing_does_not_invoice_paused_or_closed_subscriptions(client, 
     assert db_session.query(Invoice).count() == 0
     assert db_session.get(Subscription, paused.id).next_billing_date == date.today()
     assert db_session.get(Subscription, closed.id).next_billing_date == date.today()
+
+
+def test_revenue_analytics_groups_currency_and_filters_payment_dates(client, admin_headers):
+    subscription, _ = _active_subscription(client, admin_headers, "analytics@example.com")
+    invoice = client.post(
+        f"/api/billing/invoices/generate/{subscription['id']}",
+        headers=admin_headers,
+    ).json()
+    payment = client.post("/api/billing/payments", headers=admin_headers, json={
+        "invoice_id": invoice["id"],
+        "amount": "10.00",
+        "currency": "USD",
+        "payment_method": "BANK_TRANSFER",
+        "received_at": "2026-10-15T12:00:00Z",
+    })
+    assert payment.status_code == 201
+
+    response = client.get(
+        "/api/billing/analytics",
+        headers=admin_headers,
+        params={"date_from": "2026-10-15", "date_to": "2026-10-15"},
+    )
+
+    assert response.status_code == 200
+    result = response.json()
+    assert result["paid_revenue"] == [{"currency": "USD", "amount": "10.00"}]
+    assert result["outstanding_balance"] == [{"currency": "USD", "amount": "12.00"}]
+    assert result["subscriptions"] == {"active": 1, "paused": 0, "closed": 0}
+    assert len(result["recent_payments"]) == 1
+    assert result["recent_payments"][0]["payment_number"].startswith("PAY-")
+    assert result["recent_payments"][0]["customer_name"] == "Billing Customer"
+
+
+def test_revenue_analytics_restricts_roles_and_validates_date_range(client, admin_headers):
+    registered = _customer(client, "analytics-customer@example.com")
+    customer_headers = _token(client.post("/api/auth/login", json={
+        "email": "analytics-customer@example.com",
+        "password": "StrongPass!1",
+    }))
+    assert registered.status_code in {200, 201}
+    assert client.get("/api/billing/analytics", headers=customer_headers).status_code == 403
+    invalid_range = client.get(
+        "/api/billing/analytics",
+        headers=admin_headers,
+        params={"date_from": "2026-10-02", "date_to": "2026-10-01"},
+    )
+    assert invalid_range.status_code == 422

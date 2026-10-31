@@ -115,6 +115,35 @@ class PaymentPage(Page[PaymentResponse]):
     pass
 
 
+class CurrencyAmount(BaseModel):
+    currency: str
+    amount: Decimal
+
+
+class SubscriptionStatusTotals(BaseModel):
+    active: int
+    paused: int
+    closed: int
+
+
+class RecentPayment(BaseModel):
+    id: int
+    payment_number: str
+    customer_name: str
+    amount: Decimal
+    currency: str
+    received_at: datetime
+
+
+class RevenueAnalyticsResponse(BaseModel):
+    date_from: date
+    date_to: date
+    paid_revenue: list[CurrencyAmount]
+    outstanding_balance: list[CurrencyAmount]
+    subscriptions: SubscriptionStatusTotals
+    recent_payments: list[RecentPayment]
+
+
 class DiscountCreate(BaseModel):
     code: str = Field(min_length=1, max_length=80)
     name: str = Field(min_length=1, max_length=160)

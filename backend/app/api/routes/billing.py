@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, time, timedelta, timezone
 from math import ceil
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -8,11 +8,13 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.core.dependencies import get_current_user, require_roles
 from app.db.session import get_db
-from app.models.billing import Discount, Invoice, InvoiceStatus, Payment
+from app.models.billing import Discount, Invoice, InvoiceStatus, Payment, PaymentStatus
+from app.models.subscription import Subscription, SubscriptionStatus
 from app.models.user import User, UserRole
 from app.schemas.billing import (
     DiscountCreate, DiscountResponse, InvoiceGenerateRequest, InvoicePage, InvoiceResponse,
-    PaymentCreate, PaymentPage, PaymentResponse,
+    PaymentCreate, PaymentPage, PaymentResponse, RevenueAnalyticsResponse,
+    SubscriptionStatusTotals,
 )
 from app.services.billing import apply_payment, generate_invoice, process_due_invoices
 
@@ -36,6 +38,84 @@ def _load_invoice(db: Session, invoice_id: int) -> Invoice:
 def _check_invoice_visibility(invoice: Invoice, user: User) -> None:
     if user.role == UserRole.CUSTOMER and invoice.customer_id != user.id:
         raise HTTPException(404, "Invoice not found.")
+
+
+@router.get("/analytics", response_model=RevenueAnalyticsResponse)
+def get_revenue_analytics(
+    date_from: date | None = None,
+    date_to: date | None = None,
+    _user: User = Depends(manage_billing),
+    db: Session = Depends(get_db),
+):
+    end_date = date_to or date.today()
+    start_date = date_from or end_date - timedelta(days=29)
+    if start_date > end_date:
+        raise HTTPException(422, "date_from must be on or before date_to.")
+
+    start_at = datetime.combine(start_date, time.min, tzinfo=timezone.utc)
+    end_at = datetime.combine(end_date + timedelta(days=1), time.min, tzinfo=timezone.utc)
+    paid_revenue = db.execute(
+        select(Payment.currency, func.sum(Payment.amount))
+        .where(
+            Payment.status == PaymentStatus.CONFIRMED,
+            Payment.received_at >= start_at,
+            Payment.received_at < end_at,
+        )
+        .group_by(Payment.currency)
+        .order_by(Payment.currency)
+    ).all()
+    outstanding_balance = db.execute(
+        select(Invoice.currency, func.sum(Invoice.amount_due))
+        .where(
+            Invoice.status.in_((InvoiceStatus.ISSUED, InvoiceStatus.PARTIALLY_PAID, InvoiceStatus.OVERDUE)),
+            Invoice.amount_due > 0,
+        )
+        .group_by(Invoice.currency)
+        .order_by(Invoice.currency)
+    ).all()
+    subscription_counts = dict(db.execute(
+        select(Subscription.status, func.count(Subscription.id))
+        .group_by(Subscription.status)
+    ).all())
+    recent_payments = db.execute(
+        select(Payment, User.full_name)
+        .join(User, Payment.customer_id == User.id)
+        .where(
+            Payment.status == PaymentStatus.CONFIRMED,
+            Payment.received_at >= start_at,
+            Payment.received_at < end_at,
+        )
+        .order_by(Payment.received_at.desc(), Payment.id.desc())
+        .limit(5)
+    ).all()
+    return {
+        "date_from": start_date,
+        "date_to": end_date,
+        "paid_revenue": [
+            {"currency": currency, "amount": amount}
+            for currency, amount in paid_revenue
+        ],
+        "outstanding_balance": [
+            {"currency": currency, "amount": amount}
+            for currency, amount in outstanding_balance
+        ],
+        "subscriptions": SubscriptionStatusTotals(
+            active=subscription_counts.get(SubscriptionStatus.ACTIVE, 0),
+            paused=subscription_counts.get(SubscriptionStatus.PAUSED, 0),
+            closed=subscription_counts.get(SubscriptionStatus.CLOSED, 0),
+        ),
+        "recent_payments": [
+            {
+                "id": payment.id,
+                "payment_number": payment.payment_number,
+                "customer_name": customer_name,
+                "amount": payment.amount,
+                "currency": payment.currency,
+                "received_at": payment.received_at,
+            }
+            for payment, customer_name in recent_payments
+        ],
+    }
 
 
 @router.get("/invoices", response_model=InvoicePage)
