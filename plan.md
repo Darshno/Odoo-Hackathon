@@ -1,4 +1,4 @@
-# Brightloop Phase 1 Implementation Plan
+﻿# Brightloop Phase 1 Implementation Plan
 
 ## Product scope
 
@@ -9,7 +9,7 @@ Brightloop is a premium, minimal subscription-management system. Phase 1 deliver
 - **Frontend:** Vite + React with JavaScript/JSX only, React Router, Axios, Lucide React, and custom CSS. The primary runtime serves the Vite app on port 3000; Vite proxies `/api` to the FastAPI service during development.
 - **Backend:** FastAPI modular monolith organized into API routes, core configuration/security, database/session setup, SQLAlchemy models, Pydantic schemas, and services. The API is mounted under `/api` and exposes Swagger at `/docs`.
 - **Persistence:** SQLAlchemy 2.x models and Alembic migrations. `DATABASE_URL` is read only from the environment. The documented production target is PostgreSQL; tests use an isolated SQLite database and the SQLAlchemy layer remains portable to the managed MySQL-compatible preview DSN.
-- **Authentication:** Bearer JWT access tokens with a short configurable expiry. Passwords use Argon2. Public registration always creates `CUSTOMER`. Role checks are enforced by FastAPI dependencies, never by the browser. Logout clears client state and does not falsely claim stateless-token revocation.
+- **Authentication:** bearer access tokens with a short configurable expiry. Passwords use Argon2. Public registration always creates `CUSTOMER`. Role checks are enforced by FastAPI dependencies, never by the browser. Logout clears client state and does not falsely claim stateless-token revocation.
 - **Password reset:** Cryptographically random raw tokens are emailed only through configured SMTP; only SHA-256 token hashes are stored. Tokens expire after 30 minutes, are single-use, and older active tokens are invalidated when a new request is created. In development without SMTP, the API returns a preview value only when explicitly enabled and never claims delivery.
 - **Frontend auth state:** Axios attaches the in-memory/local-storage access token for this Phase 1 bearer flow; `/api/auth/me` restores the user after refresh. Protected routes redirect unauthenticated users to login and role gates prevent dashboard mismatch.
 - **Admin bootstrap:** An explicit CLI command creates the first administrator from environment-provided bootstrap values, refuses to create a second bootstrap admin, and never appears as a public endpoint.
@@ -110,3 +110,11 @@ brightloop/
 - ADMIN and STAFF manage products, variants, and plans. CUSTOMER accounts can read active catalog records only; cost prices and internal notes are omitted from their responses.
 - Plans use a single `billing_interval` value (`DAILY`, `WEEKLY`, `MONTHLY`, or `YEARLY`) plus availability timestamps. Availability controls offering eligibility only; it does not run subscription lifecycle automation.
 - Catalog records are retained and deactivated rather than hard-deleted so future quotations, subscriptions, and invoices can preserve historical terms.
+
+## Phase 3 quotation frontend status
+
+The repository currently contains a working Phase 1 and Phase 2 backend/frontend stack, but there is no quotation backend implementation in the current environment. `backend/app/api/routes`, `backend/app/models`, and `backend/app/schemas` do not include a quotation module, and searches for `quotation`, `quote`, and `Quote` return no matches.
+
+Because the actual Phase 3 backend contract is absent, any quotation frontend implementation would require assumptions about routes, request payloads, response fields, statuses, and permissions. That is not acceptable for this repository without verification from Darshan.
+
+The safe, current-course implementation is therefore to continue using only the catalog/auth APIs already confirmed in the codebase and to defer quotation-related screens until the backend contract is provided. The frontend API reference for this repo is documented in `frontend/PHASE3_API_REFERENCE.md`.
