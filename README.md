@@ -106,3 +106,27 @@ Run `alembic upgrade head` to apply the catalog migration. ADMIN and STAFF can c
 Run `alembic upgrade head` to apply migration `0003_quotations`. ADMIN and STAFF can create, edit, list, send, and cancel quotations for active CUSTOMER accounts. Customers can view only their own quotations and accept or reject quotations in `SENT` status. Quotation lines snapshot the product, variant, plan, SKU, billing interval, and decimal price at creation time; later catalog changes do not alter existing quotations. Quotation totals use `Decimal` arithmetic and quotation numbers use the `Q-YYYY-000001` format. Quotation acceptance does not activate subscriptions or create invoices or payments.
 
 Quotation APIs are available under `/api/quotations` with paginated list/detail responses and transition endpoints for `/send`, `/accept`, `/reject`, and `/cancel`.
+
+Quotation templates are available under `/api/quotations/templates`. ADMIN and STAFF can create, update, list, activate, and deactivate templates. Templates contain validated plan/product/variant lines and a validity period in days. `POST /api/quotations/from-template` copies the lines and snapshots current eligible catalog prices into a new quotation without mutating the template. Quotation records also support start dates, payment terms, tax rates, tax totals, and automatic expiry of open quotations after `valid_until`.
+
+## Phase 4 subscriptions
+
+Run `alembic upgrade head` to apply migration `0005_subscriptions`. An accepted quotation can be converted once through `POST /api/subscriptions/from-quotation/{quotation_id}`. The conversion creates an ACTIVE subscription and historical subscription lines with the accepted prices, taxes, product/plan names, billing interval, pause rule, and renewal rule. The database enforces one subscription per quotation.
+
+Subscription endpoints:
+
+```text
+GET  /api/subscriptions
+GET  /api/subscriptions/{subscription_id}
+POST /api/subscriptions/from-quotation/{quotation_id}
+POST /api/subscriptions/{subscription_id}/activate
+POST /api/subscriptions/{subscription_id}/pause
+POST /api/subscriptions/{subscription_id}/resume
+POST /api/subscriptions/{subscription_id}/renew
+POST /api/subscriptions/{subscription_id}/close
+POST /api/subscriptions/process-due
+```
+
+Subscription statuses are `ACTIVE`, `PAUSED`, and `CLOSED`. ACTIVE subscriptions may be paused when every historical line permits pausing; PAUSED subscriptions may resume; CLOSED subscriptions cannot be reactivated. Renewal advances `last_billing_date` and `next_billing_date` only when every line permits renewal. Daily, weekly, monthly, and yearly billing dates are calculated with calendar-aware month/year handling. ADMIN and STAFF manage subscriptions; customers can convert their own accepted quotations and view only their own subscriptions.
+
+`process_due_subscriptions` is a callable service used by the manual `/process-due` ADMIN/STAFF endpoint. No scheduler is configured in this repository, so deployment must invoke it from an external scheduler if automatic processing is required. No invoices or payments are created in this phase.

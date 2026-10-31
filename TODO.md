@@ -53,6 +53,7 @@
 
 ## 8. Phase 3 quotation management
 - [x] Quotation models, historical line snapshots, decimal totals, status transitions, role permissions, paginated APIs, migration `0003_quotations`, and backend tests are implemented.
+- [x] Quotation templates, reusable template lines, validity days, product/variant references, template conversion, tax amounts, payment terms, start dates, and automatic open-quotation expiry are implemented in migration `0004_quotation_templates`.
 - [x] Quotation acceptance does not activate subscriptions or create invoices or payments.
 
 ## 9. Phase 3 quotation frontend dependency check
@@ -62,5 +63,11 @@
 - [x] Add quotation details, status badges, accept/reject actions, and print-friendly formatting only where the backend contract supports them.
 - [x] Keep the frontend implementation free from invented fields, fake totals, or assumed status transitions.
 
-## 10. Explicitly deferred later-phase modules
+## 10. Task 2 subscription management
+- [x] Subscription conversion from accepted quotations with one-time database enforcement.
+- [x] Historical subscription lines, billing dates, lifecycle transitions, ownership checks, pagination, filters, and due-processing service.
+- [x] Alembic migration `0005_subscriptions` and regression coverage.
+- [x] Invoice generation, payments, and scheduler configuration remain deferred.
+
+## 11. Explicitly deferred later-phase modules
 - [ ] Subscription creation or activation, subscription lifecycle processing, recurring invoice generation, invoice payment processing, discounts, payment recording, and revenue analytics.5
