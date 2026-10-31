@@ -1,4 +1,5 @@
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
+from decimal import Decimal
 from math import ceil
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -8,11 +9,15 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.core.dependencies import get_current_user, require_roles
 from app.db.session import get_db
-from app.models.quotation import Quotation, QuotationStatus
-from app.models.catalog import SubscriptionPlan
+from app.models.billing import Invoice
+from app.models.catalog import Product, ProductVariant, SubscriptionPlan
+from app.models.quotation import Quotation, QuotationLine, QuotationStatus
 from app.models.subscription import Subscription, SubscriptionLine, SubscriptionStatus
 from app.models.user import User, UserRole
-from app.schemas.subscription import SubscriptionPage, SubscriptionResponse
+from app.schemas.subscription import (
+    PlanPurchaseRequest, PlanPurchaseResponse, SubscriptionPage, SubscriptionResponse,
+)
+from app.services.billing import generate_invoice
 from app.services.subscriptions import add_billing_interval, process_due_subscriptions
 
 router = APIRouter(prefix="/subscriptions", tags=["Subscriptions"])
@@ -35,7 +40,12 @@ def _check_visibility(subscription: Subscription, user: User) -> None:
         raise HTTPException(404, "Subscription not found.")
 
 
-def _convert(db: Session, quotation_id: int, user: User) -> Subscription:
+def _convert(
+    db: Session,
+    quotation_id: int,
+    user: User,
+    create_initial_invoice: bool = False,
+) -> Subscription:
     quotation = db.scalar(
         select(Quotation)
         .options(selectinload(Quotation.lines))
@@ -98,18 +108,112 @@ def _convert(db: Session, quotation_id: int, user: User) -> Subscription:
     try:
         db.flush()
         subscription.subscription_number = f"SUB-{date.today().year}-{subscription.id:06d}"
+        if create_initial_invoice:
+            generate_invoice(
+                db, subscription.id, period_start=start_date, today=date.today(), commit=False,
+            )
         db.commit()
     except IntegrityError as exc:
         db.rollback()
         raise HTTPException(409, "This quotation has already been converted to a subscription.") from exc
+    except HTTPException:
+        db.rollback()
+        raise
     return _load_subscription(db, subscription.id)
 
 
 @router.post("/from-quotation/{quotation_id}", response_model=SubscriptionResponse, status_code=status.HTTP_201_CREATED)
 def create_from_quotation(
-    quotation_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)
+    quotation_id: int,
+    create_initial_invoice: bool = False,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
-    return _convert(db, quotation_id, user)
+    return _convert(db, quotation_id, user, create_initial_invoice=create_initial_invoice)
+
+
+@router.post("/from-plan/{plan_id}", response_model=PlanPurchaseResponse, status_code=status.HTTP_201_CREATED)
+def purchase_plan(
+    plan_id: int,
+    payload: PlanPurchaseRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if user.role != UserRole.CUSTOMER:
+        raise HTTPException(403, "Only customers can purchase a plan through this endpoint.")
+    plan = db.scalar(
+        select(SubscriptionPlan).where(SubscriptionPlan.id == plan_id).with_for_update()
+    )
+    if not plan or not plan.is_active:
+        raise HTTPException(404, "Plan not found.")
+    if payload.quantity < plan.minimum_quantity:
+        raise HTTPException(422, f"This plan requires a minimum quantity of {plan.minimum_quantity}.")
+    now = datetime.now(timezone.utc)
+    available_from = plan.available_from
+    available_until = plan.available_until
+    if available_from and available_from.tzinfo is None:
+        available_from = available_from.replace(tzinfo=timezone.utc)
+    if available_until and available_until.tzinfo is None:
+        available_until = available_until.replace(tzinfo=timezone.utc)
+    if available_from and available_from > now:
+        raise HTTPException(409, "This plan is not available yet.")
+    if available_until and available_until < now:
+        raise HTTPException(409, "This plan is no longer available.")
+    product = db.get(Product, plan.product_id)
+    if not product or not product.is_active:
+        raise HTTPException(409, "The product for this plan is unavailable.")
+    variant = db.get(ProductVariant, plan.variant_id) if plan.variant_id else None
+    if plan.variant_id and (not variant or not variant.is_active or variant.product_id != product.id):
+        raise HTTPException(409, "The variant for this plan is unavailable.")
+
+    today = date.today()
+    interval = plan.billing_interval.value if hasattr(plan.billing_interval, "value") else str(plan.billing_interval)
+    unit_price = Decimal(plan.sales_price).quantize(Decimal("0.01"))
+    subtotal = (unit_price * payload.quantity).quantize(Decimal("0.01"))
+    quotation_line = QuotationLine(
+        plan_id=plan.id,
+        product_id=product.id,
+        variant_id=variant.id if variant else None,
+        product_name=product.name,
+        variant_name=variant.name if variant else None,
+        plan_name=plan.name,
+        sku=variant.sku if variant else product.sku,
+        billing_interval=interval,
+        quantity=payload.quantity,
+        unit_price=unit_price,
+        line_total=subtotal,
+        tax_rate=Decimal("0.00"),
+        tax_amount=Decimal("0.00"),
+        amount=subtotal,
+    )
+    quotation = Quotation(
+        customer_id=user.id,
+        created_by=user.id,
+        quotation_number="PENDING",
+        status=QuotationStatus.ACCEPTED,
+        currency=product.currency,
+        valid_until=today + timedelta(days=30),
+        validity_days=30,
+        start_date=today,
+        subtotal=subtotal,
+        tax_total=Decimal("0.00"),
+        total=subtotal,
+        lines=[quotation_line],
+    )
+    db.add(quotation)
+    try:
+        db.flush()
+        quotation.quotation_number = f"Q-{today.year}-{quotation.id:06d}"
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(409, "The plan purchase could not be completed.") from exc
+    saved_subscription = _convert(db, quotation.id, user, create_initial_invoice=True)
+    invoice = db.scalar(
+        select(Invoice)
+        .options(joinedload(Invoice.customer), joinedload(Invoice.lines), joinedload(Invoice.discounts))
+        .where(Invoice.subscription_id == saved_subscription.id)
+    )
+    return {"subscription": saved_subscription, "invoice": invoice}
 
 
 @router.get("", response_model=SubscriptionPage)
@@ -180,6 +284,14 @@ def _change_status(db: Session, subscription_id: int, target: SubscriptionStatus
     return _load_subscription(db, subscription.id)
 
 
+def _authorize_lifecycle_action(subscription: Subscription, user: User) -> None:
+    if user.role == UserRole.CUSTOMER:
+        if subscription.customer_id != user.id:
+            raise HTTPException(404, "Subscription not found.")
+    elif user.role not in {UserRole.ADMIN, UserRole.STAFF}:
+        raise HTTPException(403, "You do not have permission to manage this subscription.")
+
+
 @router.post("/{subscription_id}/activate", response_model=SubscriptionResponse)
 def activate_subscription(subscription_id: int, _user: User = Depends(manage_subscriptions), db: Session = Depends(get_db)):
     subscription = _load_subscription(db, subscription_id)
@@ -191,15 +303,17 @@ def activate_subscription(subscription_id: int, _user: User = Depends(manage_sub
 
 
 @router.post("/{subscription_id}/pause", response_model=SubscriptionResponse)
-def pause_subscription(subscription_id: int, _user: User = Depends(manage_subscriptions), db: Session = Depends(get_db)):
+def pause_subscription(subscription_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     subscription = _load_subscription(db, subscription_id)
+    _authorize_lifecycle_action(subscription, user)
     if not all(line.pause_allowed for line in subscription.lines):
         raise HTTPException(409, "This subscription does not allow pausing.")
     return _change_status(db, subscription_id, SubscriptionStatus.PAUSED)
 
-
 @router.post("/{subscription_id}/resume", response_model=SubscriptionResponse)
-def resume_subscription(subscription_id: int, _user: User = Depends(manage_subscriptions), db: Session = Depends(get_db)):
+def resume_subscription(subscription_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    subscription = _load_subscription(db, subscription_id)
+    _authorize_lifecycle_action(subscription, user)
     return _change_status(db, subscription_id, SubscriptionStatus.ACTIVE)
 
 

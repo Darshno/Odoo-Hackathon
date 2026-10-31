@@ -1,11 +1,16 @@
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.subscription import SubscriptionStatus
+from app.schemas.billing import InvoiceResponse
 from app.schemas.catalog import Page
 from app.schemas.quotation import CustomerSummary
+
+
+class PlanPurchaseRequest(BaseModel):
+    quantity: int = Field(default=1, ge=1)
 
 
 class SubscriptionLineResponse(BaseModel):
@@ -51,3 +56,8 @@ class SubscriptionResponse(BaseModel):
 
 class SubscriptionPage(Page[SubscriptionResponse]):
     pass
+
+
+class PlanPurchaseResponse(BaseModel):
+    subscription: SubscriptionResponse
+    invoice: InvoiceResponse
