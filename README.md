@@ -129,4 +129,30 @@ POST /api/subscriptions/process-due
 
 Subscription statuses are `ACTIVE`, `PAUSED`, and `CLOSED`. ACTIVE subscriptions may be paused when every historical line permits pausing; PAUSED subscriptions may resume; CLOSED subscriptions cannot be reactivated. Renewal advances `last_billing_date` and `next_billing_date` only when every line permits renewal. Daily, weekly, monthly, and yearly billing dates are calculated with calendar-aware month/year handling. ADMIN and STAFF manage subscriptions; customers can convert their own accepted quotations and view only their own subscriptions.
 
-`process_due_subscriptions` is a callable service used by the manual `/process-due` ADMIN/STAFF endpoint. No scheduler is configured in this repository, so deployment must invoke it from an external scheduler if automatic processing is required. No invoices or payments are created in this phase.
+`process_due_subscriptions` is a callable service used by the manual `/process-due` ADMIN/STAFF endpoint. Task 3 now makes due processing generate recurring invoices before advancing subscription dates. No scheduler is configured in this repository, so deployment must invoke a due-processing endpoint from an external scheduler if automatic processing is required.
+
+## Task 3 billing and payments
+
+Run `alembic upgrade head` to apply migration `0006_billing`, which adds invoices, historical invoice lines, discounts, payments, and payment allocations. Billing APIs are under `/api/billing`:
+
+```text
+GET  /api/billing/invoices
+GET  /api/billing/invoices/{invoice_id}
+POST /api/billing/invoices/generate/{subscription_id}
+POST /api/billing/invoices/process-due
+POST /api/billing/invoices/{invoice_id}/issue
+POST /api/billing/invoices/{invoice_id}/void
+GET  /api/billing/payments
+GET  /api/billing/payments/{payment_id}
+POST /api/billing/payments
+GET  /api/billing/discounts
+POST /api/billing/discounts
+POST /api/billing/discounts/{discount_id}/activate
+POST /api/billing/discounts/{discount_id}/deactivate
+```
+
+Only ACTIVE subscriptions can generate invoices. PAUSED and CLOSED subscriptions are rejected. Invoice periods are protected by a database uniqueness constraint, so repeated billing calls do not create duplicates. The first invoice period begins on the subscription start date; later periods begin on the previous billing boundary. Invoice lines preserve subscription historical prices and taxes. Invoices are issued immediately by default; `POST /invoices/generate/{subscription_id}` accepts `{"issue_immediately": false}` to create a draft, which can later be issued through `/issue`. Unpaid invoices may be voided; paid or partially paid invoices cannot be voided.
+
+Discounts support fixed and percentage values, validity windows, minimum-subtotal thresholds, and global usage limits; a fixed discount requires its currency. One discount can be attached to an invoice. Discount use is counted when an invoice is generated, including when generated as a draft. Payments support partial allocation and update `amount_paid`, `amount_due`, and invoice status transactionally. A payment does not mark an invoice paid unless the outstanding balance reaches zero. Invoice due dates currently default to 30 days after issue; quotation payment terms are copied as display text and are not interpreted to determine the due date.
+
+ADMIN and STAFF can generate/issue/void invoices, manage discounts, and record payments. Authenticated customers can list and view only their own invoices and payments. No payment gateway or automatic scheduler is configured; `/api/billing/invoices/process-due` or the existing `/api/subscriptions/process-due` endpoint must be invoked by an external scheduler for recurring billing.

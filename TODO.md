@@ -67,7 +67,9 @@
 - [x] Subscription conversion from accepted quotations with one-time database enforcement.
 - [x] Historical subscription lines, billing dates, lifecycle transitions, ownership checks, pagination, filters, and due-processing service.
 - [x] Alembic migration `0005_subscriptions` and regression coverage.
-- [x] Invoice generation, payments, and scheduler configuration remain deferred.
+- [x] Invoice generation, payments, and scheduler configuration were deferred to Task 3.
 
 ## 11. Explicitly deferred later-phase modules
-- [ ] Subscription creation or activation, subscription lifecycle processing, recurring invoice generation, invoice payment processing, discounts, payment recording, and revenue analytics.5
+- [x] Task 3 billing models, recurring invoice generation, billing-period idempotency, discounts, partial payments, and invoice balance tracking are implemented in migration `0006_billing`.
+- [ ] Payment gateways, refunds, chargebacks, proration, tax jurisdictions, and revenue analytics remain deferred.
+- [ ] Automatic scheduler configuration remains deployment-specific; due-processing endpoints require an external scheduler.
