@@ -21,6 +21,8 @@ The initialized managed preview database is MySQL-compatible. It can be used wit
 
 Copy `backend/.env.example` to `backend/.env` and replace placeholders locally. Copy `frontend/.env.example` to `frontend/.env` when you need a non-default API base URL. Never commit `.env` files or credentials.
 
+The project is validated on Python 3.12. The backend dependency set is intentionally pinned to a Python 3.12-compatible toolchain; newer 3.15 environments may fail during native wheel builds for transitive dependencies such as `PyYAML`. Use the 3.12 interpreter for local setup and validation unless a compatible toolchain is confirmed separately.
+
 Important backend variables are `SECRET_KEY`, `DATABASE_URL`, `CORS_ORIGINS`, `ACCESS_TOKEN_EXPIRE_MINUTES`, reset-token settings, SMTP settings, `FRONTEND_URL`, and the three `BOOTSTRAP_ADMIN_*` values. SMTP is optional in development. Without it, the API returns a preview token only when `ENVIRONMENT=development` and `RESET_PREVIEW_ENABLED=true`; it never claims an email was delivered. In production and staging, the app fails fast if `SECRET_KEY` is missing, `DATABASE_URL` is SQLite, or reset preview is enabled. The frontend installs Tailwind as requested, but the delivered interface intentionally uses the custom CSS design system rather than long utility strings.
 
 ## Linux/macOS backend

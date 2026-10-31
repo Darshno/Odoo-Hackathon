@@ -59,8 +59,13 @@
 ## 9. Phase 3 quotation frontend dependency check
 - [x] Confirm the Phase 3 quotation contract in the backend implementation and align the UI to the actual `/api/quotations` routes, pagination, status values, and customer-only ownership rules.
 - [x] Verify the quotation status transitions and role expectations for ADMIN, STAFF, and CUSTOMER before exposing actions in the UI.
-- [x] Implement the customer quotation portal using real backend responses rather than invented totals, fields, or status transitions.
-- [x] Add quotation details, status badges, accept/reject actions, and print-friendly formatting only where the backend contract supports them.
+- [x] Implement the customer quotation portal using real backend responses rather than mock data.
+
+## Final quality pass
+- [x] Validate backend and frontend dependency setup on the supported runtime.
+- [x] Verify the backend test suite passes against the shipped application code.
+- [x] Verify the frontend test suite and production build pass without API or routing regressions.
+- [x] Keep the project scope focused on the implemented Brightloop workflow without unauthorized backend rewrites.r than invented totals, fields, or status transitions.- [x] Add quotation details, status badges, accept/reject actions, and print-friendly formatting only where the backend contract supports them.
 - [x] Keep the frontend implementation free from invented fields, fake totals, or assumed status transitions.
 
 ## 10. Task 2 subscription management
