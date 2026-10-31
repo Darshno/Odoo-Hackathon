@@ -1,0 +1,15 @@
+import api from './api'
+
+export const register = (payload) => api.post('/auth/register', payload)
+export const login = (payload) => api.post('/auth/login', payload)
+export const getCurrentUser = () => api.get('/auth/me')
+export const logout = () => api.post('/auth/logout')
+export const forgotPassword = (payload) => api.post('/auth/forgot-password', payload)
+export const resetPassword = (payload) => api.post('/auth/reset-password', payload)
+export const getProfile = () => api.get('/profile')
+export const updateProfile = (payload) => api.patch('/profile', payload)
+
+export const listUsers = (params) => api.get('/users', { params })
+export const getUser = (id) => api.get(`/users/${id}`)
+export const createStaff = (payload) => api.post('/users/staff', payload)
+export const updateUserStatus = (id, is_active) => api.patch(`/users/${id}/status`, null, { params: { is_active } })

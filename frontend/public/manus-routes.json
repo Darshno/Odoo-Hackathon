@@ -1,0 +1,1 @@
+{"routes":[{"path":"/","title":"Brightloop Home"},{"path":"/register","title":"Create account"},{"path":"/login","title":"Sign in"},{"path":"/forgot-password","title":"Forgot password"},{"path":"/reset-password","title":"Reset password"},{"path":"/dashboard","title":"Dashboard"},{"path":"/admin/users","title":"User management"},{"path":"/profile","title":"Profile"}]}

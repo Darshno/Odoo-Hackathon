@@ -1,0 +1,12 @@
+{
+  "include": ["backend"],
+  "exclude": ["backend/.venv", "frontend/node_modules"],
+  "venvPath": "backend",
+  "venv": ".venv",
+  "executionEnvironments": [
+    {
+      "root": "backend",
+      "extraPaths": ["backend"]
+    }
+  ]
+}
