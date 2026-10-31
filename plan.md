@@ -2,7 +2,7 @@
 
 ## Product scope
 
-Brightloop is a premium, minimal subscription-management foundation. Phase 1 delivers the public landing page, real email/password authentication, password reset, role-based access control, first-admin bootstrap, user management, profile management, and role-specific dashboards. Subscription business modules are intentionally represented only as planned capabilities on the landing page and are not implemented.
+Brightloop is a premium, minimal subscription-management system. Phase 1 delivers the public landing page, real email/password authentication, password reset, role-based access control, first-admin bootstrap, user management, profile management, and role-specific dashboards. Phase 2 adds product, variant, and subscription-plan management while leaving subscription execution and billing automation for later phases.
 
 ## Implementation approach
 
@@ -77,11 +77,11 @@ brightloop/
 │   ├── vite.config.js
 │   └── .env.example
 ├── backend/
-│   ├── app/api/routes/       auth, users, profile and health routes
+│   ├── app/api/routes/       auth, users, profile, catalog and health routes
 │   ├── app/core/             settings, security, dependencies
 │   ├── app/db/               engine, session and base metadata
-│   ├── app/models/           User and password reset token models
-│   ├── app/schemas/          request/response validation
+│   ├── app/models/           User, password reset token and catalog models
+│   ├── app/schemas/          request/response and catalog validation
 │   ├── app/services/         auth and email-preview behavior
 │   ├── app/main.py           FastAPI application and CORS
 │   ├── alembic/              migration environment and versions
@@ -103,3 +103,10 @@ brightloop/
 5. Build the frontend with `pnpm build` and verify the generated route manifest is served at `/manus-routes.json`.
 6. Use the explicit bootstrap CLI for the first admin, then log in through the real API.
 7. Commit only source, migrations, lockfiles, examples, and documentation; exclude environments, secrets, caches, and build output.
+
+## Phase 2 catalog rules
+
+- Product and variant prices use decimal-safe `Numeric(12, 2)` columns. Variant prices are additive to the base product price.
+- ADMIN and STAFF manage products, variants, and plans. CUSTOMER accounts can read active catalog records only; cost prices and internal notes are omitted from their responses.
+- Plans use a single `billing_interval` value (`DAILY`, `WEEKLY`, `MONTHLY`, or `YEARLY`) plus availability timestamps. Availability controls offering eligibility only; it does not run subscription lifecycle automation.
+- Catalog records are retained and deactivated rather than hard-deleted so future quotations, subscriptions, and invoices can preserve historical terms.

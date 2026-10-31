@@ -44,5 +44,12 @@
 - [x] Frontend tests cover important authentication forms, protected routes, and role-specific navigation where practical.
 - [x] Frontend production build, backend tests, migration verification, route-manifest check, API alignment, responsive layouts, and source-language/secrets checks are actually run and reported.
 
-## 7. Explicitly deferred Phase 2 modules
-- [x] Do not implement product management, product variants, subscription plans, quotations, subscription lifecycle, recurring invoices, discounts, payment recording, or revenue analytics; landing-page copy must not imply they are live.
+## 7. Phase 2 catalog management
+- [x] Product management supports product types, SKUs, decimal-safe sales/cost prices, currencies, active/archive status, search, filters, sorting, pagination, and role-based field visibility.
+- [x] Product variants support additive sales/cost prices, attributes, per-product SKU uniqueness, activation/deactivation, and historical retention.
+- [x] Subscription plans support product/variant validation, daily/weekly/monthly/yearly billing intervals, minimum quantities, availability windows, lifecycle flags, search, filtering, sorting, pagination, and activation/deactivation.
+- [x] ADMIN and STAFF can manage catalog resources; CUSTOMER accounts can only read active, currently available catalog data and never receive cost prices or internal notes.
+- [x] Alembic migration `0002_catalog` and backend/frontend catalog tests are included.
+
+## 8. Explicitly deferred later-phase modules
+- [x] Do not implement quotations, subscription creation or activation, subscription lifecycle processing, recurring invoice generation, invoice payment processing, discounts, payment recording, or revenue analytics.

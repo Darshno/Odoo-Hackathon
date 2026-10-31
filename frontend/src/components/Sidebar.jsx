@@ -1,4 +1,4 @@
-import { BarChart3, LogOut, Menu, Settings, Users, X } from 'lucide-react'
+import { BarChart3, LogOut, Menu, Settings, Users, X, Package, Repeat2 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useState } from 'react'
 import Logo from './Logo'
@@ -8,6 +8,8 @@ export default function Sidebar() {
   const { user, logout } = useAuth()
   const [open, setOpen] = useState(false)
   const links = [{ to: '/dashboard', label: 'Dashboard', icon: BarChart3 }]
+  links.push({ to: '/products', label: 'Products', icon: Package })
+  links.push({ to: '/plans', label: 'Plans', icon: Repeat2 })
   if (user?.role === 'ADMIN') links.push({ to: '/admin/users', label: 'User Management', icon: Users })
   links.push({ to: '/profile', label: 'Profile', icon: Settings })
   return <>

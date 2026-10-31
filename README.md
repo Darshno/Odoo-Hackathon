@@ -1,6 +1,6 @@
 # Brightloop Subscription Management System
 
-Brightloop is a Phase 1 full-stack foundation for subscription operations. It includes a polished public landing page, real email/password authentication, password reset, role-based authorization, explicit first-admin bootstrap, admin user management, profile management, and honest role-specific dashboards. Products, plans, invoices, payments, and analytics are intentionally deferred to Phase 2.
+Brightloop is a full-stack subscription operations system. Phase 1 provides authentication, role-based access, user management, profiles, and dashboards. Phase 2 adds product catalog management, product variants, and validated recurring subscription plans.
 
 ## Stack
 
@@ -96,6 +96,6 @@ Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, and `SMTP_FROM`.
 
 If imports are unresolved in an editor, activate the backend virtual environment and select that interpreter. If migrations cannot connect, verify the SQLAlchemy driver prefix matches the installed driver (`postgresql+psycopg` for PostgreSQL or `mysql+pymysql` for a MySQL-compatible DSN). If the frontend cannot reach the API, confirm FastAPI is listening on port 8000 and that Vite is using the configured proxy. If a browser displays an old route after a build, restart Vite and confirm `frontend/public/manus-routes.json` is served as JSON.
 
-## Phase 1 boundary
+## Phase 2 catalog
 
-The landing page describes planned capabilities, but Phase 1 does not implement product management, product variants, subscription plans, quotations, subscription lifecycle, recurring invoices, discounts, payment recording, or revenue analytics.
+Run `alembic upgrade head` to apply the catalog migration. ADMIN and STAFF can create/update/activate/deactivate products, variants, and plans. CUSTOMER accounts can read active, currently available catalog records only; cost prices and internal notes are omitted from customer responses. Products include type, SKU, sales/cost prices, currency, notes, and creator; variants add independent prices and JSON attributes. Product and variant references are protected from deletion. Plans support DAILY, WEEKLY, MONTHLY, and YEARLY billing, minimum quantities, availability dates, pause/renewal/early-closure/auto-close controls, and paginated search/filter/sort APIs. The authenticated dashboard exposes Products and Plans routes backed by these APIs.

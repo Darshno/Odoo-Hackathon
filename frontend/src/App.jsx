@@ -10,6 +10,8 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import UsersPage from './pages/UsersPage'
 import ProfilePage from './pages/ProfilePage'
+import ProductsPage from './pages/ProductsPage'
+import PlansPage from './pages/PlansPage'
 
 function ProtectedRoute({ roles }) {
   const { user, loading } = useAuth()
@@ -43,6 +45,8 @@ export default function App() {
         <Route element={<DashboardLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/plans" element={<PlansPage />} />
           <Route element={<ProtectedRoute roles={['ADMIN']} />}>
             <Route path="/admin/users" element={<UsersPage />} />
           </Route>
