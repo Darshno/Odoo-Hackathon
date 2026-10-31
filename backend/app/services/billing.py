@@ -29,6 +29,7 @@ def generate_invoice(
     discount_id: int | None = None,
     today: date | None = None,
     issue_immediately: bool = True,
+    commit: bool = True,
 ) -> Invoice:
     today = today or date.today()
     subscription = db.scalar(
@@ -38,7 +39,7 @@ def generate_invoice(
         raise HTTPException(404, "Subscription not found.")
     if subscription.status != SubscriptionStatus.ACTIVE:
         raise HTTPException(409, "Invoices can only be generated for active subscriptions.")
-    start = period_start or subscription.last_billing_date or subscription.start_date
+    start = period_start or subscription.start_date
     if not start:
         raise HTTPException(409, "Subscription has no billing period to invoice.")
     period_start, period_end = billing_period(start, subscription.billing_interval)
@@ -128,7 +129,8 @@ def generate_invoice(
         invoice.invoice_number = f"INV-{today.year}-{invoice.id:06d}"
         if discount:
             discount.usage_count += 1
-        db.commit()
+        if commit:
+            db.commit()
     except IntegrityError:
         db.rollback()
         existing = db.scalar(select(Invoice).where(
@@ -139,6 +141,8 @@ def generate_invoice(
         if existing:
             return existing
         raise HTTPException(409, "Invoice could not be generated.")
+    if not commit:
+        return invoice
     return db.scalar(select(Invoice).options(joinedload(Invoice.customer), joinedload(Invoice.lines), joinedload(Invoice.discounts)).where(Invoice.id == invoice.id))
 
 
@@ -166,11 +170,12 @@ def apply_payment(db: Session, invoice_id: int, amount: Decimal, currency: str, 
     payment.allocations.append(PaymentAllocation(invoice_id=invoice.id, amount=amount))
     invoice.amount_paid = money(invoice.amount_paid + amount)
     invoice.amount_due = money(invoice.total - invoice.amount_paid)
-    invoice.status = (
-        InvoiceStatus.PAID if invoice.amount_due == 0
-        else InvoiceStatus.OVERDUE if invoice.due_date < date.today()
-        else InvoiceStatus.PARTIALLY_PAID
-    )
+    if invoice.amount_due == 0:
+        invoice.status = InvoiceStatus.PAID
+    elif invoice.due_date < date.today():
+        invoice.status = InvoiceStatus.OVERDUE
+    else:
+        invoice.status = InvoiceStatus.PARTIALLY_PAID
     try:
         db.commit()
     except IntegrityError as exc:

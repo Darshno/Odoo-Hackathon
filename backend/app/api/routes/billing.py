@@ -88,6 +88,7 @@ def generate_subscription_invoice(
 ):
     return generate_invoice(
         db, subscription_id,
+        period_start=payload.period_start if payload else None,
         discount_id=payload.discount_id if payload else None,
         issue_immediately=payload.issue_immediately if payload else True,
     )

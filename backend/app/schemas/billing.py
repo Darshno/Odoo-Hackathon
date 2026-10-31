@@ -98,6 +98,7 @@ class InvoicePage(Page[InvoiceResponse]):
 class InvoiceGenerateRequest(BaseModel):
     discount_id: int | None = Field(default=None, gt=0)
     issue_immediately: bool = True
+    period_start: date | None = None
 
 
 class PaymentCreate(BaseModel):

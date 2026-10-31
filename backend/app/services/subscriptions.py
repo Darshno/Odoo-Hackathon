@@ -44,7 +44,13 @@ def process_due_subscriptions(db: Session, today: date | None = None) -> int:
             subscription.next_billing_date = None
         else:
             from app.services.billing import generate_invoice
-            generate_invoice(db, subscription.id, today=today)
+            generate_invoice(
+                db,
+                subscription.id,
+                period_start=subscription.next_billing_date,
+                today=today,
+                commit=False,
+            )
             subscription.last_billing_date = subscription.next_billing_date
             subscription.next_billing_date = add_billing_interval(subscription.next_billing_date, subscription.billing_interval)
             if subscription.end_date and subscription.next_billing_date > subscription.end_date:
