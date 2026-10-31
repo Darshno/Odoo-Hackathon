@@ -43,10 +43,10 @@ def process_due_subscriptions(db: Session, today: date | None = None) -> int:
             subscription.status = SubscriptionStatus.CLOSED
             subscription.next_billing_date = None
         else:
+            from app.services.billing import generate_invoice
+            generate_invoice(db, subscription.id, today=today)
             subscription.last_billing_date = subscription.next_billing_date
-            subscription.next_billing_date = add_billing_interval(
-                subscription.next_billing_date, subscription.billing_interval
-            )
+            subscription.next_billing_date = add_billing_interval(subscription.next_billing_date, subscription.billing_interval)
             if subscription.end_date and subscription.next_billing_date > subscription.end_date:
                 subscription.status = SubscriptionStatus.CLOSED
                 subscription.next_billing_date = None
