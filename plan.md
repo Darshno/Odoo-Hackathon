@@ -113,8 +113,8 @@ brightloop/
 
 ## Phase 3 quotation frontend status
 
-The repository currently contains a working Phase 1 and Phase 2 backend/frontend stack, but there is no quotation backend implementation in the current environment. `backend/app/api/routes`, `backend/app/models`, and `backend/app/schemas` do not include a quotation module, and searches for `quotation`, `quote`, and `Quote` return no matches.
+The repository includes the actual Phase 3 quotation API contract in the backend, including the customer-scoped list/detail endpoints and status transitions under `/api/quotations`, `/api/quotations/{id}`, `/api/quotations/{id}/accept`, and `/api/quotations/{id}/reject`.
 
-Because the actual Phase 3 backend contract is absent, any quotation frontend implementation would require assumptions about routes, request payloads, response fields, statuses, and permissions. That is not acceptable for this repository without verification from Darshan.
+The frontend now follows that contract for customer-facing quotation review: customers land in a dedicated `My Quotations` workspace, can see only their own records, can open a print-friendly quotation detail page, and can accept or reject quotations only when the backend allows the transition.
 
-The safe, current-course implementation is therefore to continue using only the catalog/auth APIs already confirmed in the codebase and to defer quotation-related screens until the backend contract is provided. The frontend API reference for this repo is documented in `frontend/PHASE3_API_REFERENCE.md`.
+This implementation keeps authentication, catalog management, and backend permissions unchanged, while using server-owned totals, valid status values, and the real customer/role gating that the backend enforces.

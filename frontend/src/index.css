@@ -203,6 +203,49 @@ td strong { display: block; font-size: 13px; }
 .table-pagination { padding: 15px 18px; display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 11px; }
 .table-pagination > div { display: flex; align-items: center; gap: 10px; }
 .pagination-button { padding: 7px 9px; border: 1px solid var(--border-soft); border-radius: 7px; background: #fff; color: var(--text); font-size: 11px; }
+.status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.status-draft { background: #f3f3f0; color: var(--muted); }
+.status-sent { background: #f5efe5; color: #8a5b18; }
+.status-accepted { background: #ebf9f0; color: #087c3e; }
+.status-rejected { background: #fff1f0; color: #9f2d2d; }
+.status-cancelled { background: #f1f1f3; color: #4d4d52; }
+.status-expired { background: #f7f2f4; color: #8a4660; }
+.notice-banner { margin: 0 0 16px; padding: 12px 14px; border: 1px solid rgba(23, 201, 100, .2); background: #edfdf4; color: #0e6b40; border-radius: 10px; font-size: 13px; }
+.quotation-shell { display: grid; gap: 18px; }
+.quotation-card-table { padding: 0; }
+.table-toolbar select { min-height: 44px; border: 1px solid var(--border-strong); border-radius: 11px; background: #fff; color: var(--text); padding: 0 14px; }
+.refresh-button { min-height: 44px; }
+.table-actions-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.table-text-link { color: var(--text); font-size: 12px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.mini-button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-soft); border-radius: 999px; padding: 7px 10px; font-size: 11px; font-weight: 600; background: #fff; }
+.mini-button.accept { border-color: rgba(8, 124, 62, .22); color: #0b6a3f; }
+.mini-button.reject { border-color: rgba(159, 45, 45, .22); color: #8c2e2e; }
+.quotation-topbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 20px; }
+.quotation-topbar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.quotation-document { background: #fff; border: 1px solid var(--border-soft); border-radius: 22px; box-shadow: var(--shadow-soft); padding: 36px; }
+.quotation-document-header { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 26px; border-bottom: 1px solid var(--border-soft); padding-bottom: 18px; }
+.quotation-document-header h1 { margin: 0; font-size: clamp(30px, 4vw, 44px); letter-spacing: -.07em; }
+.quotation-status-box { display: flex; justify-content: flex-end; }
+.quotation-meta-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; margin-bottom: 24px; }
+.quotation-meta-grid > div { display: grid; gap: 7px; }
+.muted-line { color: var(--muted); font-size: 12px; }
+.quotation-notes { padding: 18px 20px; background: var(--surface); border: 1px solid var(--border-soft); border-radius: 14px; margin-bottom: 24px; }
+.quotation-notes strong { display: block; margin-bottom: 8px; }
+.quotation-notes p { margin: 0; color: var(--muted); }
+.quotation-lines { border: 1px solid var(--border-soft); border-radius: 14px; overflow: hidden; }
+.quotation-lines-header, .quotation-line { display: grid; grid-template-columns: minmax(0, 2.4fr) .6fr .8fr .8fr; gap: 10px; align-items: center; padding: 16px 18px; }
+.quotation-lines-header { background: var(--surface); color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.quotation-line { border-top: 1px solid var(--border-soft); }
+.quotation-line > div { display: grid; gap: 4px; }
+.quotation-line > div span, .quotation-line > span { color: var(--muted); font-size: 12px; }
+.quotation-line strong { font-size: 15px; }
+.quotation-totals { display: flex; flex-direction: column; gap: 10px; width: min(320px, 100%); margin: 26px 0 0 auto; padding: 18px 0 0; border-top: 1px solid var(--border-soft); }
+.quotation-totals > div { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.quotation-totals span { color: var(--muted); }
+.accepted-banner, .rejected-banner { margin-top: 26px; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.accepted-banner { background: #edfdf4; color: #0b6a3f; border: 1px solid rgba(11, 106, 63, .18); }
+.rejected-banner { background: #fff3f1; color: #8c2e2e; border: 1px solid rgba(140, 46, 46, .18); }
+.document-footer-note { margin-top: 20px; }
 .modal-backdrop { position: fixed; z-index: 200; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(10,10,10,.3); backdrop-filter: blur(5px); }
 .modal-card { width: min(100%, 500px); max-height: calc(100vh - 40px); overflow-y: auto; padding: 28px; border-radius: 19px; background: #fff; box-shadow: 0 25px 80px rgba(0,0,0,.18); }
 .modal-header { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 27px; }
@@ -268,6 +311,12 @@ td strong { display: block; font-size: 13px; }
   .table-pagination { display: block; }
   .table-pagination > div { margin-top: 12px; justify-content: space-between; }
   .content-wrap { padding-left: 18px; padding-right: 18px; }
+}
+@media print {
+  .site-navbar, .dashboard-sidebar, .mobile-sidebar-toggle, .sidebar-backdrop, .sidebar-bottom, .sidebar-nav, .quotation-topbar, .table-toolbar, .table-pagination, .table-actions-row, .button, .document-footer-note { display: none !important; }
+  .dashboard-main, .dashboard-page, .content-wrap { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+  .quotation-document { box-shadow: none !important; border: 1px solid rgba(0,0,0,.2) !important; border-radius: 0 !important; padding: 0 !important; }
+  body { background: #fff; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

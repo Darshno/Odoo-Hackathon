@@ -1,4 +1,4 @@
-import { BarChart3, LogOut, Menu, Settings, Users, X, Package, Repeat2 } from 'lucide-react'
+import { BarChart3, FileText, LogOut, Menu, Package, Repeat2, Settings, Users, X } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useState } from 'react'
 import Logo from './Logo'
@@ -7,11 +7,22 @@ import { useAuth } from '../hooks/AuthContext'
 export default function Sidebar() {
   const { user, logout } = useAuth()
   const [open, setOpen] = useState(false)
-  const links = [{ to: '/dashboard', label: 'Dashboard', icon: BarChart3 }]
-  links.push({ to: '/products', label: 'Products', icon: Package })
-  links.push({ to: '/plans', label: 'Plans', icon: Repeat2 })
-  if (user?.role === 'ADMIN') links.push({ to: '/admin/users', label: 'User Management', icon: Users })
-  links.push({ to: '/profile', label: 'Profile', icon: Settings })
+
+  const isCustomer = user?.role === 'CUSTOMER'
+  const links = isCustomer
+    ? [
+        { to: '/my-quotations', label: 'My Quotations', icon: FileText },
+        { to: '/plans', label: 'Plans', icon: Repeat2 },
+        { to: '/profile', label: 'Profile', icon: Settings },
+      ]
+    : [
+        { to: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+        { to: '/products', label: 'Products', icon: Package },
+        { to: '/plans', label: 'Plans', icon: Repeat2 },
+        ...(user?.role === 'ADMIN' ? [{ to: '/admin/users', label: 'User Management', icon: Users }] : []),
+        { to: '/profile', label: 'Profile', icon: Settings },
+      ]
+
   return <>
     <button className="mobile-sidebar-toggle" onClick={() => setOpen(true)} aria-label="Open dashboard navigation"><Menu /></button>
     <aside className={`dashboard-sidebar ${open ? 'open' : ''}`}>

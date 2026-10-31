@@ -56,11 +56,11 @@
 - [x] Quotation acceptance does not activate subscriptions or create invoices or payments.
 
 ## 9. Phase 3 quotation frontend dependency check
-- [ ] Confirm the real Phase 3 backend contract with Darshan before implementing quotation screens.
-- [ ] Verify exact quotation route names, schemas, status transitions, and permissions for ADMIN, STAFF, and CUSTOMER.
-- [ ] Implement only catalog discovery flows that are backed by the current Phase 2 catalog API.
-- [ ] Delay all quotation management, review, status actions, and print/PDF work until the backend contract is available and verified.
-- [ ] Keep the frontend implementation free from invented fields, fake totals, or assumed status transitions.
+- [x] Confirm the Phase 3 quotation contract in the backend implementation and align the UI to the actual `/api/quotations` routes, pagination, status values, and customer-only ownership rules.
+- [x] Verify the quotation status transitions and role expectations for ADMIN, STAFF, and CUSTOMER before exposing actions in the UI.
+- [x] Implement the customer quotation portal using real backend responses rather than invented totals, fields, or status transitions.
+- [x] Add quotation details, status badges, accept/reject actions, and print-friendly formatting only where the backend contract supports them.
+- [x] Keep the frontend implementation free from invented fields, fake totals, or assumed status transitions.
 
 ## 10. Explicitly deferred later-phase modules
 - [ ] Subscription creation or activation, subscription lifecycle processing, recurring invoice generation, invoice payment processing, discounts, payment recording, and revenue analytics.5
