@@ -151,6 +151,12 @@ h1 em, h2 em { font-family: 'Source Serif 4', Georgia, serif; font-weight: 600; 
 .page-header { display: flex; justify-content: space-between; align-items: end; gap: 30px; margin-bottom: 45px; }
 .page-header h1 { margin: 0; font-size: clamp(36px, 5vw, 58px); line-height: .98; letter-spacing: -.075em; }
 .page-header p { max-width: 550px; margin: 17px 0 0; color: var(--muted); }
+.subscription-toolbar { grid-template-columns: minmax(260px, 1.7fr) 160px 180px 150px 150px auto; }
+.subscription-filter-item { display: grid; gap: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.subscription-filter-item span { display: block; }
+.subscription-filter-item select,
+.subscription-filter-item input { min-height: 46px; border: 1px solid var(--border-strong); border-radius: 11px; background: #fff; padding: 0 12px; color: var(--text); }
+.refresh-button { min-height: 46px; }
 .header-actions { flex: 0 0 auto; }
 .dashboard-grid { display: grid; grid-template-columns: minmax(220px, .7fr) 1.3fr; gap: 14px; }
 .dashboard-card { min-height: 188px; padding: 25px; border: 1px solid var(--border-soft); border-radius: var(--radius); background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,.025); }
@@ -220,6 +226,9 @@ td strong { display: block; font-size: 13px; }
 .mini-button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-soft); border-radius: 999px; padding: 7px 10px; font-size: 11px; font-weight: 600; background: #fff; }
 .mini-button.accept { border-color: rgba(8, 124, 62, .22); color: #0b6a3f; }
 .mini-button.reject { border-color: rgba(159, 45, 45, .22); color: #8c2e2e; }
+.mini-button.subtle { color: var(--text); }
+.cell-stack { display: grid; gap: 3px; }
+.subscription-document { margin-top: 18px; }
 .quotation-topbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 20px; }
 .quotation-topbar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .quotation-document { background: #fff; border: 1px solid var(--border-soft); border-radius: 22px; box-shadow: var(--shadow-soft); padding: 36px; }

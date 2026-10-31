@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Alert, PrimaryButton, SecondaryButton } from '../components/FormControls'
 import { acceptQuotation, getQuotation, rejectQuotation } from '../services/auth'
+import { createSubscriptionFromQuotation } from '../services/subscriptions'
 import { errorMessage } from '../utils/validation'
 
 const statusLabels = {
@@ -43,6 +44,7 @@ export default function QuotationDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [pendingAction, setPendingAction] = useState(null)
+  const [converting, setConverting] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -83,6 +85,28 @@ export default function QuotationDetailPage() {
     }
   }
 
+  const handleConvertToSubscription = async () => {
+    if (!quotation) return
+    const confirmed = window.confirm(`Create a subscription from quotation ${quotation.quotation_number}?`)
+    if (!confirmed) return
+
+    setConverting(true)
+    setError('')
+    try {
+      const { data } = await createSubscriptionFromQuotation(quotation.id)
+      navigate(`/subscriptions/${data.id}`)
+    } catch (err) {
+      const status = err?.response?.status
+      if (status === 409) {
+        setError(errorMessage(err, 'This quotation cannot be converted to a subscription right now.'))
+      } else {
+        setError(errorMessage(err, 'This quotation could not be converted to a subscription.'))
+      }
+    } finally {
+      setConverting(false)
+    }
+  }
+
   if (loading) return <section className="dashboard-page content-wrap"><div className="table-empty">Loading quotation…</div></section>
   if (error) return <section className="dashboard-page content-wrap"><div className="content-stack"><button className="button button-secondary" onClick={() => navigate('/my-quotations')}><ArrowLeft size={16} /> Back</button><Alert>{error}</Alert></div></section>
   if (!quotation) return null
@@ -92,6 +116,11 @@ export default function QuotationDetailPage() {
       <button className="button button-secondary" onClick={() => navigate('/my-quotations')}><ArrowLeft size={16} /> Back to quotations</button>
       <div className="quotation-topbar-actions">
         <button className="button button-secondary" onClick={() => window.print()}><Printer size={16} /> Print</button>
+        {quotation.status === 'ACCEPTED' && (
+          <PrimaryButton onClick={handleConvertToSubscription} loading={converting}>
+            Create subscription
+          </PrimaryButton>
+        )}
         {canAct && <>
           <PrimaryButton onClick={() => handleAction('accept')} disabled={pendingAction !== null} loading={pendingAction === 'accept'}><CheckCircle2 size={15} /> Accept</PrimaryButton>
           <SecondaryButton onClick={() => handleAction('reject')} disabled={pendingAction !== null}><XCircle size={15} /> Reject</SecondaryButton>

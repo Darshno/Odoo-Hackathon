@@ -14,6 +14,8 @@ import ProductsPage from './pages/ProductsPage'
 import PlansPage from './pages/PlansPage'
 import MyQuotationsPage from './pages/MyQuotationsPage'
 import QuotationDetailPage from './pages/QuotationDetailPage'
+import SubscriptionsPage from './pages/SubscriptionsPage'
+import SubscriptionDetailPage from './pages/SubscriptionDetailPage'
 
 function getDefaultHome(role) {
   return role === 'CUSTOMER' ? '/my-quotations' : '/dashboard'
@@ -52,6 +54,8 @@ export default function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/plans" element={<PlansPage />} />
+          <Route path="/subscriptions" element={<SubscriptionsPage />} />
+          <Route path="/subscriptions/:id" element={<SubscriptionDetailPage />} />
           <Route element={<ProtectedRoute roles={['CUSTOMER']} />}>
             <Route path="/my-quotations" element={<MyQuotationsPage />} />
             <Route path="/quotations/:id" element={<QuotationDetailPage />} />
