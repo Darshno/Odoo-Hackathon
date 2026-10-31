@@ -12,7 +12,7 @@ export default function Sidebar() {
   const links = isCustomer
     ? [
         { to: '/my-quotations', label: 'My Quotations', icon: FileText },
-        { to: '/plans', label: 'Plans', icon: Repeat2 },
+        { to: '/plans', label: 'My Plans', icon: Repeat2 },
         { to: '/profile', label: 'Profile', icon: Settings },
       ]
     : [
